@@ -2,7 +2,7 @@ use crate::drag_state::DragState;
 use leptos::prelude::*;
 
 #[component]
-pub fn Draggable<T: Copy + Sized + Sync + Send + 'static>(
+pub fn Draggable<T: Copy + Sync + Send + 'static>(
     children: Children,
     data: T,
 ) -> impl IntoView {
