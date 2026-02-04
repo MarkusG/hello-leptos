@@ -5,8 +5,6 @@ use leptos::prelude::*;
 /// Default Home Page
 #[component]
 pub fn Home() -> impl IntoView {
-    let (show, set_show) = signal(false);
-
     view! {
         <ErrorBoundary fallback=|errors| {
             view! {
@@ -28,37 +26,9 @@ pub fn Home() -> impl IntoView {
         }>
 
             <div class="container">
-
-                <picture>
-                    <source
-                        srcset="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_pref_dark_RGB.svg"
-                        media="(prefers-color-scheme: dark)"
-                    />
-                    <img
-                        src="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_RGB.svg"
-                        alt="Leptos Logo"
-                        height="200"
-                        width="400"
-                    />
-                </picture>
-
-                <h1>"Welcome to Leptos"</h1>
-
-                <div class="buttons">
-                    <Button />
-                    <Button increment=5 />
-                </div>
-
-                <button on:click=move |_| set_show.update(move |value| *value = !*value)>
-                    toggle show
-                </button>
-
-                {move || show.get().then(|| view! {
-                    <KeyboardListener>
-                        <p>foo</p>
-                    </KeyboardListener>
-                })}
-
+                <KeyboardListener>
+                    <p>foo</p>
+                </KeyboardListener>
             </div>
         </ErrorBoundary>
     }
