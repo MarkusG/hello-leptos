@@ -1,14 +1,11 @@
 use crate::components::counter_btn::Button;
-use crate::components::draggable::Draggable;
-use crate::drag_state::DragState;
+use crate::components::keyboard_listener::KeyboardListener;
 use leptos::prelude::*;
 
 /// Default Home Page
 #[component]
 pub fn Home() -> impl IntoView {
-    let (state, set) = signal(DragState::<i32> { data: None });
-    provide_context(state);
-    provide_context(set);
+    let (show, set_show) = signal(false);
 
     view! {
         <ErrorBoundary fallback=|errors| {
@@ -50,11 +47,17 @@ pub fn Home() -> impl IntoView {
                 <div class="buttons">
                     <Button />
                     <Button increment=5 />
-                    <Draggable data=1>
-                        <p>foo</p>
-                    </Draggable>
-                    {move || state.get().data}
                 </div>
+
+                <button on:click=move |_| set_show.update(move |value| *value = !*value)>
+                    toggle show
+                </button>
+
+                {move || show.get().then(|| view! {
+                    <KeyboardListener>
+                        <p>foo</p>
+                    </KeyboardListener>
+                })}
 
             </div>
         </ErrorBoundary>
