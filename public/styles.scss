@@ -50,3 +50,23 @@ button {
   text-align: center;
   margin: 2rem;
 }
+
+.board {
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: .5rem;
+  margin-top: 3rem;
+}
+
+.tile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  font-size: 2rem;
+  padding: 1rem;
+  background-color: black;
+  border-radius: 1rem;
+}

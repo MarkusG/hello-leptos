@@ -1,6 +1,6 @@
-use crate::components::counter_btn::Button;
 use crate::components::keyboard_listener::KeyboardListener;
 use leptos::prelude::*;
+use crate::components::game::board::Board;
 
 /// Default Home Page
 #[component]
@@ -26,9 +26,7 @@ pub fn Home() -> impl IntoView {
         }>
 
             <div class="container">
-                <KeyboardListener>
-                    <p>foo</p>
-                </KeyboardListener>
+                <Board/>
             </div>
         </ErrorBoundary>
     }
