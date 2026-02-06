@@ -70,3 +70,48 @@ button {
   background-color: black;
   border-radius: 1rem;
 }
+
+.tile-2 {
+  background-color: oklch(0.80 0.1 80)
+}
+
+.tile-4 {
+  background-color: oklch(0.70 0.1 80)
+}
+
+.tile-8 {
+  background-color: oklch(0.60 0.1 80)
+}
+
+.tile-16 {
+  background-color: oklch(0.60 0.1 50)
+}
+
+.tile-32 {
+  background-color: oklch(0.60 0.12 40)
+}
+
+.tile-64 {
+  background-color: oklch(0.58 0.13 40)
+}
+
+.tile-128 {
+  background-color: oklch(0.56 0.14 40)
+}
+
+.tile-256 {
+  background-color: oklch(0.65 0.14 60)
+}
+
+.tile-512 {
+  background-color: oklch(0.70 0.15 65)
+}
+
+.tile-1024 {
+  background-color: oklch(0.75 0.16 65)
+}
+
+.tile-2048 {
+  background-color: oklch(0.90 0.2 70);
+  box-shadow: 0 0 20px oklch(0.90 0.2 70);
+}
