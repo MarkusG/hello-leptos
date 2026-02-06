@@ -1,3 +1,4 @@
+use leptos::leptos_dom::logging::console_log;
 use leptos::prelude::*;
 use reactive_stores::{Field, Store, StoreFieldIterator};
 
@@ -57,7 +58,7 @@ fn init_board() -> BoardState {
     let mut tiles: Vec<i32> = (0..15).collect::<Vec<_>>();
     let mut seed_tiles = Vec::<i32>::new();
 
-    for i in 0..2 {
+    for _ in 0..3 {
         let idx = (getrandom::u32().unwrap_or(0) % tiles.len() as u32) as usize;
         seed_tiles.push(tiles[idx]);
         tiles.remove(idx);
@@ -68,7 +69,7 @@ fn init_board() -> BoardState {
         for j in 0..4 {
             let key = i * 4 + j;
             let value = if seed_tiles.contains(&key) {
-                (getrandom::u32().unwrap_or(0u32) as i32 % 2 + 1) * 2
+                ((getrandom::u32().unwrap_or(0u32) % 2 + 1) * 2) as i32
             } else {
                 0
             };
