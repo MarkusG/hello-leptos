@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use leptos::prelude::{Get, Set};
 use reactive_stores::{AtIndex, KeyedSubfield, Store, StoreFieldIterator};
 
@@ -25,11 +26,11 @@ impl BoardState {
         let mut rows = Vec::<Row>::new();
 
         let mut tiles: Vec<i32> = (0..15).collect::<Vec<_>>();
-        let mut seed_tiles = Vec::<i32>::new();
+        let mut seed_tiles = HashSet::<i32>::new();
 
         for _ in 0..3 {
             let idx = (getrandom::u32().unwrap_or(0) % tiles.len() as u32) as usize;
-            seed_tiles.push(tiles[idx]);
+            seed_tiles.insert(tiles[idx]);
             tiles.remove(idx);
         }
 
