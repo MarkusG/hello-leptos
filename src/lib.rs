@@ -5,7 +5,6 @@ use leptos_router::{components::*, path};
 // Modules
 mod components;
 mod pages;
-pub mod drag_state;
 mod tests;
 
 // Top-Level pages
