@@ -1,6 +1,6 @@
-use std::collections::HashSet;
-use leptos::prelude::{Get, Set};
+use leptos::prelude::{Get, Read, Set, Update};
 use reactive_stores::{AtIndex, KeyedSubfield, Store, StoreFieldIterator};
+use std::collections::HashSet;
 
 #[derive(Store, Debug, Clone)]
 pub struct BoardState {
@@ -54,28 +54,52 @@ impl BoardState {
 }
 
 pub trait Playable {
-    fn move_right(&self) -> ();
-    fn move_left(&self) -> ();
-    fn move_up(&self) -> ();
-    fn move_down(&self) -> ();
+    fn generate_tile(&self) -> ();
+    fn move_right(&self) -> bool;
+    fn move_left(&self) -> bool;
+    fn move_up(&self) -> bool;
+    fn move_down(&self) -> bool;
 }
 
 impl Playable for Store<BoardState> {
-    fn move_right(&self) -> () {
-        for row in self.rows().iter_unkeyed() {
-            merge(row.tiles().iter_unkeyed());
-            pack(row.tiles().iter_unkeyed());
-        }
+    fn generate_tile(&self) {
+        let empty_tiles = self
+            .rows()
+            .iter_unkeyed()
+            .flat_map(|r| r.tiles().iter_unkeyed())
+            .filter(|t| t.value().read() == 0)
+            .collect::<Vec<_>>();
+
+        let idx = (getrandom::u32().unwrap_or(0) % empty_tiles.len() as u32) as usize;
+        let value = ((getrandom::u32().unwrap_or(0u32) % 2 + 1) * 2) as i32;
+        empty_tiles[idx].update(|t| t.value = value);
     }
 
-    fn move_left(&self) -> () {
+    fn move_right(&self) -> bool {
+        let mut state_changed = false;
+
         for row in self.rows().iter_unkeyed() {
-            merge(row.tiles().iter_unkeyed().rev());
-            pack(row.tiles().iter_unkeyed().rev());
+            state_changed |= merge(row.tiles().iter_unkeyed());
+            state_changed |= pack(row.tiles().iter_unkeyed());
         }
+
+        state_changed
     }
 
-    fn move_up(&self) -> () {
+    fn move_left(&self) -> bool {
+        let mut state_changed = false;
+
+        for row in self.rows().iter_unkeyed() {
+            state_changed |= merge(row.tiles().iter_unkeyed().rev());
+            state_changed |= pack(row.tiles().iter_unkeyed().rev());
+        }
+
+        state_changed
+    }
+
+    fn move_up(&self) -> bool {
+        let mut state_changed = false;
+
         // TODO figure out how we can have just one loop and avoid the use-after-move incurred by merge(col); pack(col);
         for col in (0..4).map(|i| {
             self.rows()
@@ -83,7 +107,7 @@ impl Playable for Store<BoardState> {
                 .map(move |r| r.tiles().iter_unkeyed().nth(i).unwrap())
                 .rev()
         }) {
-            merge(col);
+            state_changed |= merge(col);
         }
 
         for col in (0..4).map(|i| {
@@ -92,17 +116,21 @@ impl Playable for Store<BoardState> {
                 .map(move |r| r.tiles().iter_unkeyed().nth(i).unwrap())
                 .rev()
         }) {
-            pack(col);
+            state_changed |= pack(col);
         }
+
+        state_changed
     }
 
-    fn move_down(&self) -> () {
+    fn move_down(&self) -> bool {
+        let mut state_changed = false;
+
         for col in (0..4).map(|i| {
             self.rows()
                 .iter_unkeyed()
                 .map(move |r| r.tiles().iter_unkeyed().nth(i).unwrap())
         }) {
-            merge(col);
+            state_changed |= merge(col);
         }
 
         for col in (0..4).map(|i| {
@@ -110,8 +138,10 @@ impl Playable for Store<BoardState> {
                 .iter_unkeyed()
                 .map(move |r| r.tiles().iter_unkeyed().nth(i).unwrap())
         }) {
-            pack(col);
+            state_changed |= pack(col);
         }
+
+        state_changed
     }
 }
 
@@ -128,7 +158,8 @@ fn merge(
             Vec<Tile>,
         >,
     >,
-) {
+) -> bool {
+    let mut state_changed = false;
     let mut last_tile = None;
     let mut last_value = 0;
 
@@ -147,13 +178,23 @@ fn merge(
             last_tile = Some(t);
         } else if let Some(l) = last_tile {
             // non-zero tile matching the last non-zero tile
-            // duplicate its value and store it in the new row
+
+            // remove the first "parent" of the merge
             l.value().set(0);
+
+            // duplicate the value of the second "parent"
             t.value().set(last_value * 2);
+
+            // reset state
             last_tile = None;
             last_value = 0;
+
+            // mark board state as changed
+            state_changed = true;
         }
     }
+
+    state_changed
 }
 
 fn pack(
@@ -168,23 +209,35 @@ fn pack(
             Vec<Tile>,
         >,
     >,
-) {
-    let mut next_free_tile = None;
+) -> bool {
+    let mut state_changed = false;
+    let mut next_empty_tile = None;
 
     for t in tiles.rev() {
         let value = t.value().get();
 
+        // track the rear-most empty tile
         if value == 0 {
-            if next_free_tile.is_none() {
-                next_free_tile = Some(t);
+            if next_empty_tile.is_none() {
+                next_empty_tile = Some(t);
             }
             continue;
         }
 
-        if let Some(f) = next_free_tile {
+        // current tile is non-zero and there are one or more empty tiles behind it
+        if let Some(f) = next_empty_tile {
+            // "move" the current tile to the rear-most empty tile
             f.value().set(value);
             t.value().set(0);
-            next_free_tile = Some(t);
+
+            // the current tile is now the rear-most empty tile
+            // TODO NO IT'S NOT THIS IS WRONG FIX IT
+            next_empty_tile = Some(t);
+
+            // mark board state as changed
+            state_changed = true;
         }
     }
+
+    state_changed
 }

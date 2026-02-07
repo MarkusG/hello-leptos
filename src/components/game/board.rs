@@ -7,12 +7,20 @@ use reactive_stores::{Field, Store, StoreFieldIterator};
 pub fn Board() -> impl IntoView {
     let mut board = Store::new(BoardState::new());
 
-    let handle = window_event_listener(ev::keydown, move |e| match e.key().as_str() {
-        "ArrowRight" => board.move_right(),
-        "ArrowLeft" => board.move_left(),
-        "ArrowUp" => board.move_up(),
-        "ArrowDown" => board.move_down(),
-        _ => (),
+    let handle = window_event_listener(ev::keydown, move |e| {
+        let key = e.key();
+
+        let board_changed = match key.as_str() {
+            "ArrowRight" => board.move_right(),
+            "ArrowLeft" => board.move_left(),
+            "ArrowUp" => board.move_up(),
+            "ArrowDown" => board.move_down(),
+            _ => return,
+        };
+
+        if board_changed {
+            board.generate_tile()
+        }
     });
 
     on_cleanup(move || handle.remove());
