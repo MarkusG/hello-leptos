@@ -46,10 +46,16 @@ fn Row(#[prop(into)] row: Field<Row>) -> impl IntoView {
             move || row
                 .tiles()
                 .iter_unkeyed()
-                .map(|j| view! {
-                    <div class=move || format!("tile tile-{}", j.value().get())>
-                        {j.value()}
-                    </div>
+                .map(|j| {
+                    if j.value().get() != 0 {
+                        return view! {
+                            <div class=move || format!("tile tile-{}", j.value().get())>
+                                {j.value()}
+                            </div>
+                        }.into_any()
+                    }
+
+                    return view! {<div class="tile"></div>}.into_any();
                 })
                 .collect_view()
         }
