@@ -1,6 +1,8 @@
 use leptos::prelude::{Get, Read, Set, Update};
 use reactive_stores::{AtIndex, KeyedSubfield, Store, StoreFieldIterator};
 use std::collections::{HashSet, VecDeque};
+use std::ops::Index;
+use crate::components::game::board::Board;
 
 #[derive(Store, Debug, Clone)]
 pub struct BoardState {
@@ -21,7 +23,67 @@ pub struct Tile {
     value: i32,
 }
 
+pub struct BoardIterator {
+    board: BoardState,
+    idx: usize,
+}
+
+impl Iterator for BoardIterator {
+    type Item = i32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx > 15 {
+            return None;
+        }
+
+        let i = self.idx / 4;
+        let j = self.idx % 4;
+
+        let tile = self.board.rows[i].tiles[j].value;
+
+        self.idx += 1;
+        Some(tile)
+    }
+}
+
 impl BoardState {
+    fn empty() -> Self {
+        let mut rows = Vec::<Row>::new();
+
+        for i in 0..4 {
+            let mut row = Vec::<Tile>::new();
+            for j in 0..4 {
+                let key = i * 4 + j;
+                let value = 0;
+
+                row.push(Tile { key, value })
+            }
+            rows.push(Row { key: i, tiles: row })
+        }
+
+        BoardState { rows }
+    }
+
+    pub fn from_tiles(tiles: impl Index<usize, Output = i32>) -> Self {
+        let mut board = Self::empty();
+
+        for i in 0..4 {
+            for j in 0..4 {
+                let key = i * 4 + j;
+                board.rows[i].tiles[j].value = tiles[key];
+            }
+        }
+
+        board
+    }
+
+    pub fn iter(self) -> BoardIterator {
+        BoardIterator {
+            board: self,
+            idx: 0
+        }
+    }
+
     pub fn new() -> Self {
         let mut rows = Vec::<Row>::new();
 
@@ -147,7 +209,7 @@ impl Playable for Store<BoardState> {
 
 fn merge(
     // TODO could this be simpler?
-    tiles: impl Iterator<
+    tiles: impl DoubleEndedIterator<
         Item = AtIndex<
             KeyedSubfield<
                 AtIndex<KeyedSubfield<Store<BoardState>, BoardState, i32, Vec<Row>>, Vec<Row>>,
@@ -159,14 +221,12 @@ fn merge(
         >,
     >,
 ) -> bool {
-    // TODO we want to give precedence to the forward-most merges
-    // TODO e.g. 0 2 2 2 -> 0 0 2 4 not 0 0 4 2
     let mut state_changed = false;
     let mut last_tile = None;
     let mut last_value = 0;
 
     // caller-defined order determines orientation (row/col) and direction (right/left/up/down)
-    for t in tiles {
+    for t in tiles.rev() {
         let tile_value = t.value().get();
 
         // skip empty tiles
