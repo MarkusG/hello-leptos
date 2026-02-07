@@ -1,6 +1,6 @@
 use leptos::prelude::{Get, Read, Set, Update};
 use reactive_stores::{AtIndex, KeyedSubfield, Store, StoreFieldIterator};
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 #[derive(Store, Debug, Clone)]
 pub struct BoardState {
@@ -159,6 +159,8 @@ fn merge(
         >,
     >,
 ) -> bool {
+    // TODO we want to give precedence to the forward-most merges
+    // TODO e.g. 0 2 2 2 -> 0 0 2 4 not 0 0 4 2
     let mut state_changed = false;
     let mut last_tile = None;
     let mut last_value = 0;
@@ -211,28 +213,25 @@ fn pack(
     >,
 ) -> bool {
     let mut state_changed = false;
-    let mut next_empty_tile = None;
+    let mut empty_tiles = VecDeque::<_>::new();
 
     for t in tiles.rev() {
         let value = t.value().get();
 
-        // track the rear-most empty tile
+        // enqueue empty tiles, rear-most first
         if value == 0 {
-            if next_empty_tile.is_none() {
-                next_empty_tile = Some(t);
-            }
+            empty_tiles.push_back(t);
             continue;
         }
 
         // current tile is non-zero and there are one or more empty tiles behind it
-        if let Some(f) = next_empty_tile {
+        if let Some(empty_tile) = empty_tiles.pop_front() {
             // "move" the current tile to the rear-most empty tile
-            f.value().set(value);
+            empty_tile.value().set(value);
             t.value().set(0);
 
-            // the current tile is now the rear-most empty tile
-            // TODO NO IT'S NOT THIS IS WRONG FIX IT
-            next_empty_tile = Some(t);
+            // the current tile is now empty
+            empty_tiles.push_back(t);
 
             // mark board state as changed
             state_changed = true;
